@@ -1,7 +1,8 @@
 import * as React from 'react';
 import {Appbar} from 'react-native-paper';
+import {goBack} from '../Utils/NavigationRef';
 
-const CustomHeader = ({naviagtion, back, route}) => {
+const CustomHeader = ({back, route}) => {
   console.log(route.name);
   return (
     <Appbar.Header
@@ -9,7 +10,14 @@ const CustomHeader = ({naviagtion, back, route}) => {
       mode="center-aligned"
       statusBarHeight={0}
       style={{backgroundColor: '#4f378b'}}>
-      {back && <Appbar.BackAction onPress={() => {}} />}
+      {back && (
+        <Appbar.BackAction
+          color="#ffffff"
+          onPress={() => {
+            goBack();
+          }}
+        />
+      )}
       <Appbar.Content title={route.name} color="#ffffff" />
     </Appbar.Header>
   );
