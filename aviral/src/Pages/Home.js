@@ -1,137 +1,110 @@
 import * as React from 'react';
 import {useState} from 'react';
-import {StyleSheet, View} from 'react-native';
-import {Text, Button} from 'react-native-paper';
+import {StyleSheet, View, TouchableWithoutFeedback} from 'react-native';
+import {Text, Button, ActivityIndicator} from 'react-native-paper';
+import {getDashboard, getSessions} from '../Utils/Api';
 import SafeAreaView from 'react-native-safe-area-view';
 import DropDownPicker from 'react-native-dropdown-picker';
 
-export default function Home({navigation}) {
+export default function Home({navigation, route}) {
   const [open, setOpen] = useState(false);
-  const [session, setSession] = useState(null);
-  const data = [
-    {
-      session_id: 'JUL-22',
-      name: 'July-Dec 2022',
-      current: true,
-    },
-    {
-      session_id: 'SUM-22',
-      name: 'SUMMER 2022',
-      current: true,
-    },
-    {
-      session_id: 'JAN-22',
-      name: 'Jan-June 2022',
-      current: true,
-    },
-    {
-      session_id: 'JUL-21',
-      name: 'July-Dec 2021',
-      current: true,
-    },
-    {
-      session_id: 'SUM-21',
-      name: 'SUMMER 2021',
-      current: false,
-    },
-    {
-      session_id: 'JAN-21',
-      name: 'Jan-June 2021',
-      current: true,
-    },
-    {
-      session_id: 'JUL-20',
-      name: 'July-Dec 2020',
-      current: true,
-    },
-    {
-      session_id: 'SUM-20',
-      name: 'SUMMER 2020',
-      current: false,
-    },
-    {
-      session_id: 'JAN-20',
-      name: 'Jan-June 2020',
-      current: false,
-    },
-    {
-      session_id: 'JUL-19',
-      name: 'July-Dec 2019',
-      current: false,
-    },
-    {
-      session_id: 'SUM-19',
-      name: 'SUMMER 2019',
-      current: false,
-    },
-    {
-      session_id: 'JAN-19',
-      name: 'Jan-June 2019',
-      current: false,
-    },
-    {
-      session_id: 'JUL-18',
-      name: 'July-Dec 2018',
-      current: false,
-    },
-  ];
-  let gpa = '8.54';
-  let color = 'green';
-  if (Number(gpa) < 7) {
-    color = 'red';
-  } else if (Number(gpa) < 8) {
-    color = 'orange';
-  }
+  const [session, setSession] = useState(route.params.session || null);
+  const jwt_token = route.params.jwt_token;
+  const [data, setData] = useState([]);
+  const [dashboard, setDashboard] = useState();
+
   function handleViewScore() {
     if (!session) {
       alert('Please select a session');
       return;
     }
-    navigation.navigate('Score', {session_id: session});
+    navigation.navigate('Score', {session: session, jwt_token: jwt_token});
   }
 
+  const setSessions = async () => {
+    const res = await getSessions();
+    setData(res.data);
+  };
+  const setUserDashboard = async () => {
+    const res = await getDashboard(jwt_token, session);
+    console.log(res.data);
+    setDashboard(res.data);
+  };
+  React.useEffect(() => {
+    setSessions();
+    setUserDashboard();
+  }, []);
+  if (!dashboard)
+    return <ActivityIndicator animating={true} style={{marginTop: 20}} />;
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.innerCont}>
-        <View style={styles.profileCard}>
-          <Text style={{fontSize: 15}}>Welcome</Text>
-          <Text style={{fontWeight: 'bold', fontSize: 20}}>IEC2021002</Text>
-          <Text style={{fontWeight: 'bold', fontSize: 30}}>Anurag Jain</Text>
-          <Text style={{fontSize: 14}}>B.Tech.(ECE)</Text>
-          <Text style={{fontSize: 14}}>Third Semester</Text>
-          <View style={styles.gpaRow}>
-            <Text style={{fontWeight: 'bold', fontSize: 16}}>
-              GPA:{' '}
-              <Text style={{fontWeight: 'bold', fontSize: 16, color: color}}>
-                {gpa}
+      <TouchableWithoutFeedback
+        style={{flex: 1}}
+        onPress={() => {
+          setOpen(false);
+        }}>
+        <View style={styles.innerCont}>
+          <View style={styles.profileCard}>
+            <Text style={{fontSize: 15}}>Welcome</Text>
+            <Text style={{fontWeight: 'bold', fontSize: 20}}>
+              {dashboard.student_id}
+            </Text>
+            <Text style={{fontWeight: 'bold', fontSize: 30}}>
+              {(
+                dashboard.first_name +
+                ' ' +
+                dashboard.middle_name +
+                ' ' +
+                dashboard.last_name
+              ).trim()}
+            </Text>
+            <Text style={{fontSize: 14}}>{dashboard.program}</Text>
+            <Text style={{fontSize: 14}}>{dashboard.semester} Semester</Text>
+            <View style={styles.gpaRow}>
+              <Text style={{fontWeight: 'bold', fontSize: 16}}>
+                GPA:{' '}
+                <Text
+                  style={{
+                    fontWeight: 'bold',
+                    fontSize: 16,
+                    color:
+                      dashboard.cgpi < 7
+                        ? 'red'
+                        : dashboard.cgpi < 8
+                        ? 'orange'
+                        : 'green',
+                  }}>
+                  {dashboard.cgpi}
+                </Text>
               </Text>
-            </Text>
-            <Text style={{fontWeight: 'bold', fontSize: 16}}>
-              Credits: 42/140
-            </Text>
+              <Text style={{fontWeight: 'bold', fontSize: 16}}>
+                Credits: {dashboard.completed_core}/
+                {dashboard.total_core_credits}
+              </Text>
+            </View>
+          </View>
+          <View style={styles.buttonCont}>
+            <DropDownPicker
+              schema={{label: 'name', value: 'session_id'}}
+              open={open}
+              value={session}
+              items={data}
+              setOpen={setOpen}
+              setValue={setSession}
+              placeholder="Select a session"
+              style={{borderColor: '#4f378b', borderWidth: 2, marginBottom: 12}}
+            />
+            <Button
+              dark={true}
+              mode="contained"
+              loading={false}
+              style={styles.button}
+              onPress={handleViewScore}>
+              View Score
+            </Button>
           </View>
         </View>
-        <View style={styles.buttonCont}>
-          <DropDownPicker
-            schema={{label: 'name', value: 'session_id'}}
-            open={open}
-            value={session}
-            items={data}
-            setOpen={setOpen}
-            setValue={setSession}
-            placeholder="Select a session"
-            style={{borderColor: '#4f378b', borderWidth: 2, marginBottom: 12}}
-          />
-          <Button
-            dark={true}
-            mode="contained"
-            loading={false}
-            style={styles.button}
-            onPress={handleViewScore}>
-            View Score
-          </Button>
-        </View>
-      </View>
+      </TouchableWithoutFeedback>
     </SafeAreaView>
   );
 }
