@@ -7,12 +7,19 @@ const CustomHeader = ({back, route, navigation}) => {
   const [visible, setVisible] = React.useState(false);
   const openMenu = () => setVisible(true);
   const closeMenu = () => setVisible(false);
-  console.log(route.name);
+  // console.log(route.name);
+
   const handleLogout = async () => {
     await AsyncStorage.removeItem('creds');
     setVisible(false);
     navigation.reset({index: 0, routes: [{name: 'Login'}]});
   };
+
+  const handleCreators = () => {
+    setVisible(false);
+    navigation.navigate('Creators');
+  };
+
   return (
     <Appbar.Header
       dark={true}
@@ -39,6 +46,7 @@ const CustomHeader = ({back, route, navigation}) => {
               onPress={openMenu}
             />
           }>
+          <Menu.Item onPress={handleCreators} title="Creators" />
           <Menu.Item onPress={handleLogout} title="Logout" />
         </Menu>
       )}

@@ -10,6 +10,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import Login from './src/Pages/Login';
 import Home from './src/Pages/Home';
 import Score from './src/Pages/Score';
+import Creators from './src/Pages/Creators';
+
 import CustomHeader from './src/Components/Header';
 import {navigationRef} from './src/Utils/NavigationRef';
 import {logUser} from './src/Utils/Api';
@@ -57,6 +59,7 @@ const App = () => {
           />
           <Stack.Screen name="Aviral" component={Home} />
           <Stack.Screen name="Score" component={Score} />
+          <Stack.Screen name="Creators" component={Creators} />
         </Stack.Navigator>
       </NavigationContainer>
     </PaperProvider>
